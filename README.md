@@ -1,51 +1,185 @@
 <!---
 {
-  "depends_on": [],
+  "id": "25eed4ab-4d42-4ce3-866d-dc2992f713a9",
+  "depends_on": [
+    "AND",
+    "04c71741-b965-41c0-936d-62f513e73df6s",
+    "66726805-4497-4dce-a1ba-ccf930a721f8"
+  ],
   "author": "Stephan Bökelmann",
-  "first_used": "2025-03-17",
-  "keywords": ["learning", "exercises", "education", "practice"]
+  "first_used": "2025-06-06",
+  "keywords": ["PlantUML", "documentation", "workflow", "LaTeX", "latexmk", "SVG", "integration"]
 }
 --->
 
-# Learning Through Exercises
+# A Documentation Workflow: Integrating PlantUML with LaTeX
 
-## Introduction
-Learning by doing is one of the most effective methods to acquire new knowledge and skills. Rather than passively consuming information, actively engaging in problem-solving fosters deeper understanding and long-term retention. By working through structured exercises, students can grasp complex concepts in a more intuitive and applicable way. This approach is particularly beneficial in technical fields like programming, mathematics, and engineering.
+> In this exercise you will learn how to create diagrams from natural language requirements, transcribe them into PlantUML, generate vector graphics, and integrate them into a structured LaTeX project using automated build tools. Furthermore we will explore how to structure documentation projects for scalability and reproducibility.
+
+In real-world technical documentation, diagrams often originate from design discussions, specifications, or plain text descriptions. Automating the generation of diagrams and their inclusion into documentation ensures consistency and reproducibility, especially in long-lived projects. This exercise will guide you through a complete mini-workflow that converts a short text specification into a class diagram, embeds it into a LaTeX document using modern best practices, and builds the full documentation using `latexmk`.
+
+Your final output will be a structured directory containing LaTeX sources, diagrams, bibliographies, and a reproducible build pipeline.
 
 ### Further Readings and Other Sources
-- [The Importance of Practice in Learning](https://www.sciencedirect.com/science/article/pii/S036013151300062X)
-- "The Art of Learning" by Josh Waitzkin
-- [How to Learn Effectively: 5 Key Strategies](https://www.edutopia.org/article/5-research-backed-learning-strategies)
+
+* [PlantUML Documentation](https://plantuml.com/)
+* [KOMA-Script scrartcl documentation (CTAN)](https://ctan.org/pkg/koma-script)
+* [latexmk documentation](https://mg.readthedocs.io/latexmk.html)
+* [LaTeX graphics inclusion (Overleaf guide)](https://www.overleaf.com/learn/latex/Inserting_Images)
+* [DOI:10.1007/978-1-4842-5617-2\_10](https://doi.org/10.1007/978-1-4842-5617-2_10)
+
+---
 
 ## Tasks
-1. **Write a Summary**: Summarize the concept of "learning by doing" in 3-5 sentences.
-2. **Example Identification**: List three examples from your own experience where learning through exercises helped you understand a topic better.
-3. **Create an Exercise**: Design a simple exercise for a topic of your choice that someone else could use to practice.
-4. **Follow an Exercise**: Find an online tutorial that includes exercises and complete at least two of them.
-5. **Modify an Existing Exercise**: Take a basic problem from a textbook or online course and modify it to make it slightly more challenging.
-6. **Pair Learning**: Explain a concept to a partner and guide them through an exercise without giving direct answers.
-7. **Review Mistakes**: Look at an exercise you've previously completed incorrectly. Identify why the mistake happened and how to prevent it in the future.
-8. **Time Challenge**: Set a timer for 10 minutes and try to solve as many simple exercises as possible on a given topic.
-9. **Self-Assessment**: Create a checklist to evaluate your own performance in completing exercises effectively.
-10. **Reflect on Progress**: Write a short paragraph on how this structured approach to exercises has influenced your learning.
 
-<details>
-  <summary>Tip for Task 5</summary>
-  Try making small adjustments first, such as increasing the difficulty slightly or adding an extra constraint.
-</details>
+### Task 0 — Create a Structured Project Directory
+
+In your working directory, create the following structure:
+
+```bash
+mkdir -p documentation/{src,figures,bibliographies,build}
+cd documentation
+```
+
+You will place:
+
+* LaTeX source files in `src/`
+* PlantUML diagrams in `figures/`
+* Bibliographies (if any) in `bibliographies/`
+* Build artifacts will be placed into `build/`
+
+### Task 1 — Analyze the Specification
+
+Given the following text:
+
+> *In the PetStore system, there are Pets, Owners, and Visits. Each Pet has a name, species, and birth date. An Owner has a name, address, and a list of Pets. Visits are linked to Pets and store the date and description of the visit.*
+
+Your task: extract relevant classes, attributes, and relationships to build a class diagram.
+
+### Task 2 — Write the PlantUML Diagram
+
+Create `figures/petstore-classdiagram.puml`:
+
+```puml
+@startuml
+class Pet {
+  +String name
+  +String species
+  +Date birthDate
+}
+
+class Owner {
+  +String name
+  +String address
+}
+
+class Visit {
+  +Date date
+  +String description
+}
+
+Owner "1" -- "0..*" Pet
+Pet "0..*" -- "0..*" Visit
+@enduml
+```
+
+### Task 3 — Generate the Diagram as PDF or EPS for LaTeX
+
+Inside `documentation/` run:
+
+```bash
+plantuml -teps figures/petstore-classdiagram.puml
+```
+
+You will now have: `figures/petstore-classdiagram.eps`.
+(EPS is chosen because it integrates perfectly into PDF/LaTeX pipelines.)
+
+Alternatively, you may generate PDF directly:
+
+```bash
+plantuml -tpdf figures/petstore-classdiagram.puml
+```
+
+### Task 4 — Create the LaTeX Document
+
+Inside `src/`, create `main.tex`:
+
+```latex
+\documentclass[12pt]{scrartcl}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{hyperref}
+
+\title{PetStore System Documentation}
+\author{Technical Documentation Workflow}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Class Diagram}
+
+The PetStore domain model is shown in Figure~\ref{fig:classdiagram}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../figures/petstore-classdiagram.pdf}
+    \caption{Class diagram for PetStore system}
+    \label{fig:classdiagram}
+\end{figure}
+
+\section{Conclusion}
+
+This document demonstrates integrating automatically generated diagrams into LaTeX.
+
+\end{document}
+```
+
+> ⚠ Adjust `petstore-classdiagram.pdf` or `.eps` depending on your generated format.
+
+### Task 5 — Automate Diagram Rendering in latexmk
+
+Inside `documentation/`, create a build file `latexmkrc` with automatic PlantUML integration:
+
+```perl
+$pdf_mode = 1;
+$aux_dir  = 'build';
+$out_dir  = 'build';
+$bibtex_use = 1;
+
+# Automatically generate PDF diagrams from PlantUML files
+add_cus_dep('puml', 'pdf', 0, 'plantuml2pdf');
+
+sub plantuml2pdf {
+    my ($base) = @_;
+    system("plantuml -tpdf figures/$base.puml");
+}
+```
+
+Now you can simply run:
+
+```bash
+cd documentation/src
+latexmk -r ../latexmkrc -pdf main.tex
+```
+
+latexmk will automatically detect changes in `.puml` files, regenerate the diagrams, and compile the LaTeX document.
+
+---
 
 ## Questions
-1. What are the main benefits of learning through exercises compared to passive learning?
-2. How do exercises improve long-term retention?
-3. Can you think of a subject where learning through exercises might be less effective? Why?
-4. What role does feedback play in learning through exercises?
-5. How can self-designed exercises improve understanding?
-6. Why is it beneficial to review past mistakes in exercises?
-7. How does explaining a concept to someone else reinforce your own understanding?
-8. What strategies can you use to stay motivated when practicing with exercises?
-9. How can timed challenges contribute to learning efficiency?
-10. How do exercises help bridge the gap between theory and practical application?
+
+1. Why is it helpful to separate the directory structure into `src/`, `figures/`, `bibliographies/`, and `build/`?
+2. What are the advantages of using latexmk compared to plain `pdflatex`?
+3. Modify the specification by adding a new class: `Vet` (name, phone). Update your PlantUML diagram accordingly.
+4. Regenerate the PlantUML diagram and rebuild the LaTeX document. Confirm that the updated diagram appears in your PDF.
+5. How could this workflow be integrated into a version-controlled project (e.g. git)?
+6. How would you extend this workflow to generate multiple diagrams automatically?
+7. What are the pros and cons of rendering diagrams on-the-fly versus committing generated diagram images into your repository?
+
+---
 
 ## Advice
-Practice consistently and seek out diverse exercises that challenge different aspects of a topic. Combine exercises with reflection and feedback to maximize your learning efficiency. Don't hesitate to adapt exercises to fit your own needs and ensure that you're actively engaging with the material, rather than just going through the motions.
 
+In real projects, maintaining a reproducible documentation build system pays off long-term. By combining text-based diagrams with automated compilation, you ensure documentation is always synchronized with design updates. Tools like PlantUML and latexmk allow for deterministic builds, while keeping full control locally. For larger projects, consider integrating CI pipelines that validate diagram generation and documentation compilation automatically.
