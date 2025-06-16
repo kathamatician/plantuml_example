@@ -1,0 +1,12 @@
+$pdf_mode = 1;
+$aux_dir  = 'build';
+$out_dir  = 'build';
+$bibtex_use = 1;
+
+# Automatically generate PDF diagrams from PlantUML files
+add_cus_dep('puml', 'pdf', 0, 'plantuml2pdf');
+
+sub plantuml2pdf {
+    my ($base) = @_;
+    system("plantuml -tpdf figures/$base.puml");
+}

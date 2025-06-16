@@ -1,0 +1,26 @@
+@startuml
+class Pet {
+  +String name
+  +String species
+  +Date birthDate
+}
+
+class Owner {
+  +String name
+  +String address
+}
+
+class Visit {
+  +Date date
+  +String description
+}
+
+class Vet {
+  +String name
+  +String phone
+}
+
+Owner "1" -- "0..*" Pet
+Pet "0..*" -- "0..*" Visit
+Visit "1" -- "1" Vet
+@enduml
