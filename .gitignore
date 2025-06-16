@@ -1,0 +1,18 @@
+# Build directory
+build/
+
+# LaTeX intermediate files
+*.aux
+*.log
+*.toc
+*.out
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# PlantUML generated diagrams (optional, see previous discussion)
+*.pdf
+*.svg
+*.png
